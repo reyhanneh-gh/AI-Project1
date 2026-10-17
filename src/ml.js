@@ -69,7 +69,9 @@ function buildSharedCnn() {
   }).apply(x);
 
   console.log("CNN 7: Global average pooling...");
-  x = tf.layers.globalAveragePooling2d().apply(x);
+  x = tf.layers.globalAveragePooling2d({
+    dataFormat: "channelsLast"
+  }).apply(x);
 
   console.log("CNN 8: Dense layer...");
   x = tf.layers.dense({ units: 64, activation: "relu" }).apply(x);
