@@ -26,24 +26,65 @@ export function cropFromVideo(video, box, padding = 0.18) {
   return canvas;
 }
 
+
+
 export function imageCanvasToTensor(canvas) {
-  return tf.tidy(() => tf.browser.fromPixels(canvas)
-    .toFloat()
-    .div(127.5)
-    .sub(1));
+  return tf.tidy(() =>
+    tf.browser.fromPixels(canvas)
+      .toFloat()
+      .div(127.5)
+      .sub(1)
+  );
 }
 
+
+
+
 function buildSharedCnn() {
+  console.log("CNN 1: Creating input...");
   const input = tf.input({ shape: [IMAGE_SIZE, IMAGE_SIZE, 3] });
-  let x = tf.layers.conv2d({ filters: 16, kernelSize: 3, strides: 2, padding: "same", activation: "relu" }).apply(input);
+
+  console.log("CNN 2: First convolution...");
+  let x = tf.layers.conv2d({
+    filters: 16, kernelSize: 3, strides: 2,
+    padding: "same", activation: "relu"
+  }).apply(input);
+
+  console.log("CNN 3: First pooling...");
   x = tf.layers.maxPooling2d({ poolSize: 2 }).apply(x);
-  x = tf.layers.conv2d({ filters: 32, kernelSize: 3, padding: "same", activation: "relu" }).apply(x);
+
+  console.log("CNN 4: Second convolution...");
+  x = tf.layers.conv2d({
+    filters: 32, kernelSize: 3,
+    padding: "same", activation: "relu"
+  }).apply(x);
+
+  console.log("CNN 5: Second pooling...");
   x = tf.layers.maxPooling2d({ poolSize: 2 }).apply(x);
-  x = tf.layers.conv2d({ filters: 64, kernelSize: 3, padding: "same", activation: "relu" }).apply(x);
+
+  console.log("CNN 6: Third convolution...");
+  x = tf.layers.conv2d({
+    filters: 64, kernelSize: 3,
+    padding: "same", activation: "relu"
+  }).apply(x);
+
+  console.log("CNN 7: Global average pooling...");
   x = tf.layers.globalAveragePooling2d().apply(x);
+
+  console.log("CNN 8: Dense layer...");
   x = tf.layers.dense({ units: 64, activation: "relu" }).apply(x);
-  return tf.model({ inputs: input, outputs: x, name: "shared_cnn" });
+
+  console.log("CNN 9: Building shared model...");
+  const model = tf.model({
+    inputs: input,
+    outputs: x,
+    name: "shared_cnn"
+  });
+
+  console.log("CNN 10: Shared model created!");
+  return model;
 }
+
 
 function attachHeads(features, prefix) {
   const hidden = tf.layers.dense({ units: 64, activation: "relu", name: `${prefix}_shared_dense` }).apply(features);
